@@ -112,10 +112,26 @@ class GlobalBridgeTests(unittest.TestCase):
         old.touch()
         new.touch()
         motor = bridge.MotorSerial()
-        read_fd, write_fd = os.pipe()
+        opened = []
+
+        class FakePort:
+            def __init__(self, name):
+                self.name = name
+                self.written = []
+
+            def write(self, data):
+                self.written.append(data)
+
+            def read(self, limit=4096):
+                return b""
+
+            def close(self):
+                opened.append(("closed", self.name))
+
         try:
             def fake_probe(candidate):
-                motor.fd = os.dup(read_fd)
+                opened.append(("opened", candidate))
+                motor.port = FakePort(candidate)
                 motor.path = candidate
                 return True
 
@@ -127,10 +143,9 @@ class GlobalBridgeTests(unittest.TestCase):
                 motor.last_probe_at = -float("inf")
                 self.assertTrue(motor.connect())
                 self.assertEqual(motor.path, str(new))
+            self.assertTrue(str(new) in [value for action, value in opened if action == "opened"])
         finally:
             motor.close()
-            os.close(read_fd)
-            os.close(write_fd)
 
     def test_deleted_active_rollout_stops_motor(self):
         path = self.path("removed")
