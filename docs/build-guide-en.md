@@ -8,7 +8,7 @@ I tested this for short runs with a Mac, an ESP32-C3 SuperMini, a ULN2003 driver
 
 | Item | Count | Notes |
 | --- | ---: | --- |
-| Mac, Linux, or Windows computer with local Codex | 1 | Runs the bridge and connects to the board over USB. The bridge is tested on all three systems. |
+| Mac, Linux, or Windows computer with local Codex | 1 | Runs the bridge and connects to the board over USB. The Windows serial path is new and has not been tried against a real board yet. |
 | ESP32-C3 SuperMini | 1 | This board **is** the microcontroller. Check that yours exposes `5V`, `G`, and GPIO4–7. |
 | ULN2003 driver board | 1 | Must have IN1–IN4, power terminals, and the motor's five-pin socket. |
 | 5 V 28BYJ-48 five-wire stepper motor | 1 | The current physical build uses an approximately 1:16 version. Read the voltage on your motor label. |
