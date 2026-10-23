@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import sys
 import tempfile
 import time
 import unittest
@@ -9,9 +10,9 @@ from unittest.mock import patch
 
 
 SCRIPT = Path(__file__).with_name("global_bridge.py")
+sys.path.insert(0, str(SCRIPT.parent))
 spec = importlib.util.spec_from_file_location("global_bridge", SCRIPT)
 bridge = importlib.util.module_from_spec(spec)
-import sys
 sys.modules[spec.name] = bridge
 spec.loader.exec_module(bridge)
 

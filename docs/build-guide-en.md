@@ -8,16 +8,16 @@ I tested this for short runs with a Mac, an ESP32-C3 SuperMini, a ULN2003 driver
 
 | Item | Count | Notes |
 | --- | ---: | --- |
-| Mac with local Codex | 1 | Runs the bridge and connects to the board over USB. Windows has not been adapted. |
+| Mac, Linux, or Windows computer with local Codex | 1 | Runs the bridge and connects to the board over USB. The bridge is tested on all three systems. |
 | ESP32-C3 SuperMini | 1 | This board **is** the microcontroller. Check that yours exposes `5V`, `G`, and GPIO4–7. |
 | ULN2003 driver board | 1 | Must have IN1–IN4, power terminals, and the motor's five-pin socket. |
 | 5 V 28BYJ-48 five-wire stepper motor | 1 | The current physical build uses an approximately 1:16 version. Read the voltage on your motor label. |
 | Female-to-female jumper wires | **6** | Four signal wires plus power and ground; use a different connector type if your boards require it. |
-| USB-C **data** cable | 1 | Powers and connects the current ESP32 board. Match the computer end to your Mac. |
+| USB-C **data** cable | 1 | Powers and connects the current ESP32 board. Match the computer end to your computer. |
 
 Use the [labeled electronics photo](../publish-assets/hardware-components-labeled.png) to identify the parts. The motor's white plug is unplugged in that photo; the wiring table below shows what to connect. The [optional flower-parts photo](../publish-assets/optional-flower-parts-labeled.png) shows my purchased decoration. No printable model is provided.
 
-The motor's built-in five-pin plug goes into the ULN2003 socket and does not require five more jumper wires. Install Arduino IDE and Espressif's Arduino-ESP32 board support using the [official installation instructions](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html). The project has been tested with core version **3.3.11**. Install Python 3.9 or newer for the Mac bridge; no third-party Python packages are required.
+The motor's built-in five-pin plug goes into the ULN2003 socket and does not require five more jumper wires. Install Arduino IDE and Espressif's Arduino-ESP32 board support using the [official installation instructions](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html). The project has been tested with core version **3.3.11**. Install Python 3.9 or newer for the bridge; no third-party Python packages are required.
 
 Unplug USB before changing wires. Do not connect a 5 V motor to a 3.3 V pin. If you change the motor, add weight, or use a separate power supply, check the voltage and current again; the ESP32 and motor driver must share a ground. Keep moving pieces clear of fixed parts and begin at LOW.
 
@@ -34,7 +34,7 @@ With USB **disconnected**, verify the labels printed on your specific hardware a
 | `GPIO6` | `IN3` |
 | `GPIO7` | `IN4` |
 
-Plug the motor's five-pin connector into the ULN2003 motor socket. After checking the six connections, attach the USB-C data cable to the Mac. Test without a heavy flower attached to the shaft.
+Plug the motor's five-pin connector into the ULN2003 motor socket. After checking the six connections, attach the USB-C data cable to the computer. Test without a heavy flower attached to the shaft.
 
 ## 3. Upload and test the firmware
 
@@ -47,12 +47,14 @@ The firmware also understands `RUN MEDIUM`, `RUN HIGH`, `RUN XHIGH`, and `RUN UL
 
 ## 4. Connect to local Codex
 
-Download this repository and open a Mac terminal at its root. Check Python and take a state-only snapshot:
+Download this repository and open a terminal at its root. Check Python and take a state-only snapshot:
 
 ```sh
 python3 --version
 python3 m1/global_bridge.py --once
 ```
+
+On Windows, run `python --version` and `python m1\global_bridge.py --once` instead.
 
 `--once` does **not** open USB. `STOP` is expected when no local Codex task is currently running. Then run the live bridge:
 
@@ -62,25 +64,25 @@ python3 m1/global_bridge.py
 
 Keep that terminal open and start a **local** Codex task. The bridge reads local task start, finish, and reasoning-effort events, maps them to serial commands, and probes for an ESP32 that responds to `PING`. A successful connection prints `Motor connected` and later `Motor: RUN ...`. Press **Ctrl+C** to exit and send `STOP`.
 
-If several devices appear as serial ports, specify the real device path from your Mac:
+If several devices appear as serial ports, specify the real device path: `/dev/cu.usbmodemXXXX` on macOS, or `COM3` on Windows.
 
 ```sh
 python3 m1/global_bridge.py --port /dev/cu.usbmodemXXXX
 ```
 
-`XXXX` is only an example. After manual testing works, [`m1/README.md`](../m1/README.md) explains the optional macOS login service (`python3 m1/install_macos.py install`), updates, removal, and logs.
+`XXXX` is only an example. After manual testing works, [`m1/README.md`](../m1/README.md) explains the optional login service (`python3 m1/install_macos.py install` on macOS, `python m1\install_windows.py install` on Windows), updates, removal, and logs.
 
 ```text
-Local Codex records → Python bridge on the Mac → USB serial → ESP32-C3 → ULN2003 → motor
+Local Codex records → Python bridge on the computer → USB serial → ESP32-C3 → ULN2003 → motor
 ```
 
 No OpenAI API key is required. The bridge reads local state records and does not upload conversation content to a project server. **Do not upload your Codex session records or personal logs to GitHub**; they may contain private content.
 
 ## 5. What transfers to another setup?
 
-- **Same Mac and hardware family:** Try the included [firmware](../m0/motor_control/motor_control.ino), [bridge](../m1/global_bridge.py), and [installer](../m1/install_macos.py). The bridge uses the current user's `CODEX_HOME` (or default `~/.codex`) and probes serial ports; it does not hard-code the author's username or USB port.
+- **Same hardware family:** Try the included [firmware](../m0/motor_control/motor_control.ino), [bridge](../m1/global_bridge.py), and installers for [macOS](../m1/install_macos.py) or [Windows](../m1/install_windows.py). The bridge uses the current user's `CODEX_HOME` (or default `~/.codex`) and probes serial ports; it does not hard-code the author's username or USB port.
 - **Different boards or motors:** Recheck pins, supply, motor type, and acceleration. A four-wire bipolar motor and a different driver cannot run this ULN2003 firmware unchanged. You can retain the `RUN ...` / `STOP` serial protocol and replace the motor-control code.
-- **Different Codex environment:** The Mac program reads local Codex task files. Their format may change after a Codex update, so test it again after upgrading. [Local and Worktree tasks run on the computer, while Cloud tasks run remotely](https://learn.chatgpt.com/docs/environments/modes). Windows serial access and service installation have not been implemented.
+- **Different Codex environment:** The bridge reads local Codex task files. Their format may change after a Codex update, so test it again after upgrading. [Local and Worktree tasks run on the computer, while Cloud tasks run remotely](https://learn.chatgpt.com/docs/environments/modes). Cloud tasks are not supported.
 
 For another setup, first make the computer send `PING`, `RUN LOW`, and `STOP` to the ESP32. Then find a reliable way to tell when your Codex task starts and ends. You can add speed control later; spinning and stopping already give you the basic effect.
 

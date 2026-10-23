@@ -18,6 +18,7 @@ from pathlib import Path
 
 
 LABEL = "com.rotatingflower.codex-motor"
+MODULES = ("global_bridge.py", "serial_link.py", "process_lock.py")
 
 
 def locations() -> tuple[Path, Path, Path]:
@@ -41,7 +42,8 @@ def install(replace: bool, sessions_root: Path, port: str) -> None:
     plist_path.parent.mkdir(parents=True, exist_ok=True)
     logs.mkdir(parents=True, exist_ok=True)
     target = support / "global_bridge.py"
-    shutil.copy2(Path(__file__).with_name("global_bridge.py"), target)
+    for name in MODULES:
+        shutil.copy2(Path(__file__).with_name(name), support / name)
     domain = f"gui/{os.getuid()}"
     if replace:
         launchctl("bootout", domain, str(plist_path), check=False)
@@ -70,9 +72,10 @@ def uninstall() -> None:
     if plist_path.exists():
         launchctl("bootout", domain, str(plist_path), check=False)
         plist_path.unlink()
-    target = support / "global_bridge.py"
-    if target.exists():
-        target.unlink()
+    for name in MODULES:
+        target = support / name
+        if target.exists():
+            target.unlink()
     print(f"Removed {LABEL}; log files were kept")
 
 
